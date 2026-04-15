@@ -157,11 +157,3 @@ This project is open-source and available under the MIT License.
 
 
 -----------------------------------------------------------------------------------
-
-If you want, I can also:
-
-Add **badges (stars, forks, build status)**
-
-Make it **top-tier GitHub README (with visuals & GIFs)**
-
-Or tailor it specifically for **placements in big MNCs**
