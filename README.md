@@ -1,6 +1,12 @@
 📚 Library Management System (C)
 
 A console-based Library Management System built using C that allows efficient management of books, members, and transactions with file handling for data persistence.
+Created By:- 
+1. Sohendrajeet Singh Yadav
+2. Rashi Pareta
+3. Rakshita Sharma
+4. Manish Kumar
+5. Smriti Priyadarshi
 
 
 -----------------------------------------------------------------------------------
