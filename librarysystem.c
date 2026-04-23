@@ -4,34 +4,24 @@
 #include <time.h>
 #include <ctype.h>
 
-/* ── ANSI colors ── */
-#define RESET "\033[0m"
-#define BOLD "\033[1m"
-#define DIM "\033[2m"
-#define RED "\033[31m"
-#define GREEN "\033[32m"
-#define YELLOW "\033[33m"
-#define CYAN "\033[36m"
-#define MAGENTA "\033[35m"
-#define WHITE "\033[97m"
-#define BG_DARK "\033[48;5;234m"
+/* ANSI colors removed for simplicity */
 
-/* ── Limits ── */
+/* Limits */
 #define MAX_STR 100
 #define MAX_BOOKS 500
 #define MAX_MEMBERS 500
 #define MAX_ISSUES 1000
-#define MAX_DAYS 14
-#define FINE_PER_DAY 5.0
+#define MAX_DAYS 4
+#define FINE_PER_DAY 10.0
 #define MAX_BORROW 3
 
-/* ── File names ── */
+/* File names */
 #define FILE_BOOKS "books.dat"
 #define FILE_MEMBERS "members.dat"
 #define FILE_ISSUES "issues.dat"
 #define FILE_META "meta.dat"
 
-/* ── Structs ── */
+/* Structs */
 typedef struct
 {
     int id;
@@ -63,12 +53,12 @@ typedef struct
     double extraFine;
 } Issue;
 
-/* ── Function Prototypes ── */
+/* Function Prototypes */
 void addFine();
 void saveData();
 int loadData();
 
-/* ── Globals ── */
+/* Globals */
 Book books[MAX_BOOKS];
 Member members[MAX_MEMBERS];
 Issue issues[MAX_ISSUES];
@@ -93,7 +83,7 @@ void saveData()
     }
     else
     {
-        printf(RED "  ✘  Could not save books data.\n" RESET);
+        printf("[ERROR] Could not save books data.\n");
     }
 
     /* Save members */
@@ -106,7 +96,7 @@ void saveData()
     }
     else
     {
-        printf(RED "  ✘  Could not save members data.\n" RESET);
+        printf("[ERROR] Could not save members data.\n");
     }
 
     /* Save issues */
@@ -119,7 +109,7 @@ void saveData()
     }
     else
     {
-        printf(RED "  ✘  Could not save issues data.\n" RESET);
+        printf("[ERROR] Could not save issues data.\n");
     }
 
     /* Save meta (ID counters) */
@@ -132,7 +122,7 @@ void saveData()
     }
     else
     {
-        printf(RED "  ✘  Could not save meta data.\n" RESET);
+        printf("[ERROR] Could not save meta data.\n");
     }
 }
 
@@ -187,22 +177,18 @@ int loadData()
 
 void printHeader(const char *title)
 {
-    printf("\n" CYAN BOLD
-           "╔══════════════════════════════════════════════════╗\n"
-           "║                    %-48s║\n"
-           "╚══════════════════════════════════════════════════╝\n" RESET,
-           title);
+    printf("\n--- %s ---\n", title);
 }
 
 void printDivider()
 {
-    printf(CYAN "──────────────────────────────────────────────────\n" RESET);
+    printf("----------------------------------------------\n");
 }
 
-void printSuccess(const char *msg) { printf(GREEN BOLD "  ✔  %s\n" RESET, msg); }
-void printError(const char *msg) { printf(RED BOLD "  ✘  %s\n" RESET, msg); }
-void printWarn(const char *msg) { printf(YELLOW BOLD "  ⚠  %s\n" RESET, msg); }
-void printInfo(const char *msg) { printf(CYAN "  ℹ  %s\n" RESET, msg); }
+void printSuccess(const char *msg) { printf("[OK] %s\n", msg); }
+void printError(const char *msg) { printf("[ERROR] %s\n", msg); }
+void printWarn(const char *msg) { printf("[WARNING] %s\n", msg); }
+void printInfo(const char *msg) { printf("[INFO] %s\n", msg); }
 
 /* ════════════════════════════════════════════════
    Input helpers
@@ -214,7 +200,7 @@ int getIntInput(const char *prompt)
     char buf[32];
     while (1)
     {
-        printf(BOLD "%s" RESET, prompt);
+        printf("%s", prompt);
         if (fgets(buf, sizeof(buf), stdin) && sscanf(buf, "%d", &n) == 1)
             return n;
         printError("Please enter a valid number.");
@@ -223,7 +209,7 @@ int getIntInput(const char *prompt)
 
 void getStrInput(const char *prompt, char *buf, int maxLen)
 {
-    printf(BOLD "%s" RESET, prompt);
+    printf("%s", prompt);
     fgets(buf, maxLen, stdin);
     buf[strcspn(buf, "\n")] = 0;
     /* trim leading spaces */
@@ -311,16 +297,16 @@ void addBook()
     memset(b, 0, sizeof(Book));
     b->id = nextBookId++;
     b->active = 1;
-    getStrInput("  Title  : ", b->title, MAX_STR);
-    getStrInput("  Author : ", b->author, MAX_STR);
-    getStrInput("  Genre  : ", b->genre, MAX_STR);
+    getStrInput("Title: ", b->title, MAX_STR);
+    getStrInput("Author: ", b->author, MAX_STR);
+    getStrInput("Genre: ", b->genre, MAX_STR);
     if (strlen(b->title) == 0)
     {
         printError("Title cannot be empty.");
         nextBookId--;
         return;
     }
-    b->totalCopies = getIntInput("  Copies : ");
+    b->totalCopies = getIntInput("Copies: ");
     if (b->totalCopies <= 0)
     {
         printError("Copies must be > 0.");
@@ -337,7 +323,7 @@ void viewBooks()
 {
     printHeader("All Books");
     int found = 0;
-    printf(CYAN "  %-4s  %-30s  %-22s  %-14s  %s\n" RESET,
+    printf("%-4s  %-30s  %-22s  %-14s  %s\n",
            "ID", "Title", "Author", "Genre", "Available");
     printDivider();
     for (int i = 0; i < bookCount; i++)
@@ -345,10 +331,9 @@ void viewBooks()
         if (!books[i].active)
             continue;
         found = 1;
-        const char *avColor = books[i].availableCopies > 0 ? GREEN : RED;
-        printf("  %-4d  %-30s  %-22s  %-14s  %s%d/%d%s\n",
+        printf("%-4d  %-30s  %-22s  %-14s  %d/%d\n",
                books[i].id, books[i].title, books[i].author, books[i].genre,
-               avColor, books[i].availableCopies, books[i].totalCopies, RESET);
+               books[i].availableCopies, books[i].totalCopies);
     }
     if (!found)
         printWarn("No books found.");
@@ -358,14 +343,14 @@ void searchBooks()
 {
     printHeader("Search Books");
     char query[MAX_STR];
-    getStrInput("  Search (title / author / genre): ", query, MAX_STR);
+    getStrInput("Search (title / author / genre): ", query, MAX_STR);
     if (strlen(query) == 0)
     {
         printError("Search query is empty.");
         return;
     }
     int found = 0;
-    printf(CYAN "\n  %-4s  %-30s  %-22s  %-14s  %s\n" RESET,
+    printf("\n%-4s  %-30s  %-22s  %-14s  %s\n",
            "ID", "Title", "Author", "Genre", "Available");
     printDivider();
     for (int i = 0; i < bookCount; i++)
@@ -377,10 +362,9 @@ void searchBooks()
             containsCI(books[i].genre, query))
         {
             found = 1;
-            const char *avColor = books[i].availableCopies > 0 ? GREEN : RED;
-            printf("  %-4d  %-30s  %-22s  %-14s  %s%d/%d%s\n",
+            printf("%-4d  %-30s  %-22s  %-14s  %d/%d\n",
                    books[i].id, books[i].title, books[i].author, books[i].genre,
-                   avColor, books[i].availableCopies, books[i].totalCopies, RESET);
+                   books[i].availableCopies, books[i].totalCopies);
         }
     }
     if (!found)
@@ -391,7 +375,7 @@ void deleteBook()
 {
     printHeader("Delete Book");
     viewBooks();
-    int id = getIntInput("\n  Enter Book ID to delete (0 to cancel): ");
+    int id = getIntInput("\nEnter Book ID to delete (0 to cancel): ");
     if (id == 0)
         return;
     Book *b = findBookById(id);
@@ -406,7 +390,7 @@ void deleteBook()
         return;
     }
     char confirm[8];
-    printf(YELLOW "  Delete \"%s\"? (yes/no): " RESET, b->title);
+    printf("Delete \"%s\"? (yes/no): ", b->title);
     fgets(confirm, sizeof(confirm), stdin);
     if (strncmp(confirm, "yes", 3) == 0)
     {
@@ -436,15 +420,15 @@ void addMember()
     memset(m, 0, sizeof(Member));
     m->id = nextMemberId++;
     m->active = 1;
-    getStrInput("  Name  : ", m->name, MAX_STR);
+    getStrInput("Name: ", m->name, MAX_STR);
     if (strlen(m->name) == 0)
     {
         printError("Name cannot be empty.");
         nextMemberId--;
         return;
     }
-    getStrInput("  Email : ", m->email, MAX_STR);
-    getStrInput("  Phone : ", m->phone, MAX_STR);
+    getStrInput("Email: ", m->email, MAX_STR);
+    getStrInput("Phone: ", m->phone, MAX_STR);
     m->booksIssued = 0;
     memberCount++;
     saveData();
@@ -455,7 +439,7 @@ void viewMembers()
 {
     printHeader("All Members");
     int found = 0;
-    printf(CYAN "  %-4s  %-22s  %-28s  %-14s  %s\n" RESET,
+    printf("%-4s  %-22s  %-28s  %-14s  %s\n",
            "ID", "Name", "Email", "Phone", "Issued");
     printDivider();
     for (int i = 0; i < memberCount; i++)
@@ -463,7 +447,7 @@ void viewMembers()
         if (!members[i].active)
             continue;
         found = 1;
-        printf("  %-4d  %-22s  %-28s  %-14s  %d\n",
+        printf("%-4d  %-22s  %-28s  %-14s  %d\n",
                members[i].id, members[i].name,
                members[i].email, members[i].phone,
                members[i].booksIssued);
@@ -476,14 +460,14 @@ void searchMembers()
 {
     printHeader("Search Members");
     char query[MAX_STR];
-    getStrInput("  Search (name / email / phone): ", query, MAX_STR);
+    getStrInput("Search (name / email / phone): ", query, MAX_STR);
     if (strlen(query) == 0)
     {
         printError("Search query is empty.");
         return;
     }
     int found = 0;
-    printf(CYAN "\n  %-4s  %-22s  %-28s  %-14s  %s\n" RESET,
+    printf("\n%-4s  %-22s  %-28s  %-14s  %s\n",
            "ID", "Name", "Email", "Phone", "Issued");
     printDivider();
     for (int i = 0; i < memberCount; i++)
@@ -495,7 +479,7 @@ void searchMembers()
             containsCI(members[i].phone, query))
         {
             found = 1;
-            printf("  %-4d  %-22s  %-28s  %-14s  %d\n",
+            printf("%-4d  %-22s  %-28s  %-14s  %d\n",
                    members[i].id, members[i].name,
                    members[i].email, members[i].phone,
                    members[i].booksIssued);
@@ -509,7 +493,7 @@ void deleteMember()
 {
     printHeader("Delete Member");
     viewMembers();
-    int id = getIntInput("\n  Enter Member ID to delete (0 to cancel): ");
+    int id = getIntInput("\nEnter Member ID to delete (0 to cancel): ");
     if (id == 0)
         return;
     Member *m = findMemberById(id);
@@ -524,7 +508,7 @@ void deleteMember()
         return;
     }
     char confirm[8];
-    printf(YELLOW "  Delete member \"%s\"? (yes/no): " RESET, m->name);
+    printf("Delete member \"%s\"? (yes/no): ", m->name);
     fgets(confirm, sizeof(confirm), stdin);
     if (strncmp(confirm, "yes", 3) == 0)
     {
@@ -547,19 +531,19 @@ void issueBook()
     printHeader("Issue Book");
 
     /* show available books */
-    printf(CYAN "\n  Available Books:\n" RESET);
-    printf("  %-4s  %-30s  %-22s  Copies\n", "ID", "Title", "Author");
+    printf("\nAvailable Books:\n");
+    printf("%-4s  %-30s  %-22s  Copies\n", "ID", "Title", "Author");
     printDivider();
     for (int i = 0; i < bookCount; i++)
     {
         if (!books[i].active || books[i].availableCopies <= 0)
             continue;
-        printf("  %-4d  %-30s  %-22s  %d\n",
+        printf("%-4d  %-30s  %-22s  %d\n",
                books[i].id, books[i].title, books[i].author, books[i].availableCopies);
     }
 
-    int mid = getIntInput("\n  Member ID : ");
-    int bid = getIntInput("  Book ID   : ");
+    int mid = getIntInput("\nMember ID: ");
+    int bid = getIntInput("Book ID: ");
 
     Member *m = findMemberById(mid);
     Book *b = findBookById(bid);
@@ -576,12 +560,12 @@ void issueBook()
     }
     if (m->booksIssued >= MAX_BORROW)
     {
-        printf(RED "  Borrow limit (%d books) reached for %s.\n" RESET, MAX_BORROW, m->name);
+        printf("[ERROR] Borrow limit (%d books) reached for %s.\n", MAX_BORROW, m->name);
         return;
     }
     if (b->availableCopies <= 0)
     {
-        printf(RED "  No copies of \"%s\" are available.\n" RESET, b->title);
+        printf("[ERROR] No copies of \"%s\" are available.\n", b->title);
         return;
     }
 
@@ -591,7 +575,7 @@ void issueBook()
         if (issues[i].memberId == mid && issues[i].bookId == bid &&
             strcmp(issues[i].returnDate, "PENDING") == 0)
         {
-            printf(RED "  %s already has \"%s\" issued.\n" RESET, m->name, b->title);
+            printf("[ERROR] %s already has \"%s\" issued.\n", m->name, b->title);
             return;
         }
     }
@@ -610,8 +594,8 @@ void issueBook()
 
     saveData();
 
-    printf(GREEN "\n  ✔  Issued \"%s\" to %s\n" RESET, b->title, m->name);
-    printf(DIM "     Issue ID : %d  |  Due in %d days\n" RESET, issueCount, MAX_DAYS);
+    printf("\n[OK] Issued \"%s\" to %s\n", b->title, m->name);
+    printf("Issue ID: %d | Due in %d days\n", issueCount, MAX_DAYS);
 }
 
 double computeFine(const char *issueDate)
@@ -643,18 +627,18 @@ void returnBook()
     Member *m = findMemberById(iss->memberId);
 
     double fine = computeFine(iss->issueDate) + iss->extraFine;
-    printf("\n  Book   : %s\n  Member : %s\n  Issued : %s\n",
+    printf("\nBook: %s\nMember: %s\nIssued: %s\n",
            b ? b->title : "(deleted)",
            m ? m->name : "(deleted)",
            iss->issueDate);
 
     if (fine > 0.0)
     {
-        printf(YELLOW "\n  ⚠  Overdue fine: Rs %.2f\n" RESET, fine);
+        printf("\n[WARNING] Overdue fine: Rs %.2f\n", fine);
     }
     else
     {
-        printf(GREEN "\n  ✔  Returned on time. No fine.\n" RESET);
+        printf("\n[OK] Returned on time. No fine.\n");
     }
 
     todayStr(iss->returnDate);
@@ -671,7 +655,7 @@ void viewAllIssues()
 {
     printHeader("All Issued Books");
     int found = 0;
-    printf(CYAN "  %-5s  %-28s  %-20s  %-12s  %-12s  %s\n" RESET,
+    printf("%-5s  %-28s  %-20s  %-12s  %-12s  %s\n",
            "IssID", "Book", "Member", "Issued", "Due/Return", "Fine");
     printDivider();
     for (int i = 0; i < issueCount; i++)
@@ -682,7 +666,6 @@ void viewAllIssues()
 
         /* compute due date string */
         char dueOrReturn[20];
-        const char *statusColor;
         if (strcmp(iss->returnDate, "PENDING") == 0)
         {
             int days = daysSince(iss->issueDate);
@@ -690,29 +673,26 @@ void viewAllIssues()
             if (remaining < 0)
             {
                 snprintf(dueOrReturn, sizeof(dueOrReturn), "OVERDUE %dd", -remaining);
-                statusColor = RED;
             }
             else
             {
                 snprintf(dueOrReturn, sizeof(dueOrReturn), "Due in %dd", remaining);
-                statusColor = YELLOW;
             }
         }
         else
         {
             snprintf(dueOrReturn, sizeof(dueOrReturn), "%s", iss->returnDate);
-            statusColor = GREEN;
         }
 
         double fine = ((strcmp(iss->returnDate, "PENDING") == 0) ? computeFine(iss->issueDate) : 0.0) + iss->extraFine;
 
         found = 1;
-        printf("  %-5d  %-28s  %-20s  %-12s  %s%-12s%s  %.2f\n",
+        printf("%-5d  %-28s  %-20s  %-12s  %-12s  %.2f\n",
                iss->issueId,
                b ? b->title : "(deleted)",
                m ? m->name : "(deleted)",
                iss->issueDate,
-               statusColor, dueOrReturn, RESET,
+               dueOrReturn,
                fine);
     }
     if (!found)
@@ -732,25 +712,25 @@ void checkFine()
     Book *b = findBookById(iss->bookId);
     Member *m = findMemberById(iss->memberId);
 
-    printf("\n  Issue ID : %d\n", iss->issueId);
-    printf("  Book     : %s\n", b ? b->title : "(deleted)");
-    printf("  Member   : %s\n", m ? m->name : "(deleted)");
-    printf("  Issued   : %s\n", iss->issueDate);
+    printf("\nIssue ID: %d\n", iss->issueId);
+    printf("Book: %s\n", b ? b->title : "(deleted)");
+    printf("Member: %s\n", m ? m->name : "(deleted)");
+    printf("Issued: %s\n", iss->issueDate);
 
     if (strcmp(iss->returnDate, "PENDING") != 0)
     {
-        printf("  Returned : %s\n", iss->returnDate);
-        printInfo("No fine — already returned.");
+        printf("Returned: %s\n", iss->returnDate);
+        printInfo("No fine - already returned.");
         return;
     }
 
     int days = daysSince(iss->issueDate);
     double fine = computeFine(iss->issueDate) + iss->extraFine;
-    printf("  Days out : %d / %d allowed\n", days, MAX_DAYS);
+    printf("Days out: %d / %d allowed\n", days, MAX_DAYS);
     if (fine > 0.0)
-        printf(RED "  Fine     : Rs %.2f\n" RESET, fine);
+        printf("Fine: Rs %.2f\n", fine);
     else
-        printf(GREEN "  Fine     : None (within limit)\n" RESET);
+        printf("Fine: None (within limit)\n");
 }
 
 void addFine()
@@ -767,7 +747,7 @@ void addFine()
     Issue *iss = &issues[id - 1];
 
     double fine;
-    printf("  Enter extra fine amount (Rs): ");
+    printf("Enter extra fine amount (Rs): ");
     scanf("%lf", &fine);
     getchar(); /* clear buffer */
 
@@ -793,13 +773,13 @@ void bookMenu()
     do
     {
         printHeader("Books Menu");
-        printf("  1. Add Book\n"
-               "  2. View All Books\n"
-               "  3. Search Books\n"
-               "  4. Delete Book\n"
-               "  0. Back\n");
+        printf("1. Add Book\n"
+               "2. View All Books\n"
+               "3. Search Books\n"
+               "4. Delete Book\n"
+               "0. Back\n");
         printDivider();
-        ch = getIntInput("  Choice: ");
+        ch = getIntInput("Choice: ");
         switch (ch)
         {
         case 1:
@@ -828,13 +808,13 @@ void memberMenu()
     do
     {
         printHeader("Members Menu");
-        printf("  1. Add Member\n"
-               "  2. View All Members\n"
-               "  3. Search Members\n"
-               "  4. Delete Member\n"
-               "  0. Back\n");
+        printf("1. Add Member\n"
+               "2. View All Members\n"
+               "3. Search Members\n"
+               "4. Delete Member\n"
+               "0. Back\n");
         printDivider();
-        ch = getIntInput("  Choice: ");
+        ch = getIntInput("Choice: ");
         switch (ch)
         {
         case 1:
@@ -863,14 +843,14 @@ void issueMenu()
     do
     {
         printHeader("Issue / Return Menu");
-        printf("  1. Issue Book\n"
-               "  2. Return Book\n"
-               "  3. View All Issues\n"
-               "  4. Check Fine\n"
-               "  5. Add Extra Fine\n"
-               "  0. Back\n");
+        printf("1. Issue Book\n"
+               "2. Return Book\n"
+               "3. View All Issues\n"
+               "4. Check Fine\n"
+               "5. Add Extra Fine\n"
+               "0. Back\n");
         printDivider();
-        ch = getIntInput("  Choice: ");
+        ch = getIntInput("Choice: ");
         switch (ch)
         {
         case 1:
@@ -905,16 +885,13 @@ void mainMenu()
     int ch;
     do
     {
-        printf("\n" CYAN BOLD
-               "╔══════════════════════════════════════════════════╗\n"
-               "║         📚  LIBRARY MANAGEMENT SYSTEM            ║\n"
-               "╚══════════════════════════════════════════════════╝\n" RESET);
-        printf("  1. Books\n"
-               "  2. Members\n"
-               "  3. Issue / Return\n"
-               "  0. Exit\n");
+        printf("\n--- LIBRARY MANAGEMENT SYSTEM ---\n");
+        printf("1. Books\n"
+               "2. Members\n"
+               "3. Issue / Return\n"
+               "0. Exit\n");
         printDivider();
-        ch = getIntInput("  Choice: ");
+        ch = getIntInput("Choice: ");
         switch (ch)
         {
         case 1:
@@ -928,7 +905,7 @@ void mainMenu()
             break;
         case 0:
             saveData();
-            printf(CYAN "\n  Goodbye! 📚\n\n" RESET);
+            printf("\nGoodbye!\n\n");
             break;
         default:
             printError("Invalid choice.");
@@ -942,7 +919,7 @@ void mainMenu()
 
 void seedData()
 {
-    /* ── 120 Books ── */
+    /* 120 Books */
     Book seedBooks[] = {
         {1, "The C Programming Language", "Dennis Ritchie & Brian Kernighan", "Programming", 5, 5, 1},
         {2, "Data Structures & Algorithms", "Mark Allen Weiss", "CS", 4, 4, 1},
@@ -1073,7 +1050,7 @@ void seedData()
         books[bookCount++] = seedBooks[i];
     }
 
-    /* ── 240 Members ── */
+    /* 240 Members */
     Member seedMembers[] = {
         {1, "Abhinav Sharma", "abhinav.sharma01@gmail.com", "9123456781", 0, 1},
         {2, "Rithvik Roshan", "rithvik.roshan.hr@gmail.com", "9234567812", 0, 1},
@@ -1333,14 +1310,14 @@ int main()
 {
     if (!loadData())
     {
-        /* No saved data found — load seed data and save it */
+    /* No saved data found - load seed data and save it */
         seedData();
         saveData();
-        printf(CYAN "  ℹ  First run: seed data loaded and saved.\n" RESET);
+        printf("[INFO] First run: seed data loaded and saved.\n");
     }
     else
     {
-        printf(CYAN "  ℹ  Data loaded from files.\n" RESET);
+        printf("[INFO] Data loaded from files.\n");
     }
 
     mainMenu();
